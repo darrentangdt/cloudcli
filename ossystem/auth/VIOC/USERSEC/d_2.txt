@@ -1,0 +1,7 @@
+histsize=10
+loginretries=0
+maxage=0
+minalpha=1
+minlen=8
+minother=1
+pwdwarntime=7

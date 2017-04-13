@@ -1,0 +1,22 @@
+V_LINUX_SEC_PASSEXPIRY_PASS_MAX_DAYS=60
+V_LINUX_SEC_PASSEXPIRY_PASS_WARN_AGE=1
+V_LINUX_SEC_PASSINTENSITY_minlen=8
+V_LINUX_SEC_PASSINTENSITY_minclass=2
+V_LINUX_SEC_PASSLOCK_deny=10
+V_LINUX_SEC_PASSLOCK_unlock_time=300
+V_LINUX_SEC_OVERTIME_TMOUT=120
+V_LINUX_SEC_UMASK_umask=022
+F|/etc/passwd|root|root|.-rw-r--r-- -rw-r----- -rw------- ---------- -rw----r-- -r--r----- -r-------- -r-----r--
+F|/etc/group|root|root|.-rw-r--r-- -rw-r----- -rw------- ---------- -rw----r-- -r--r----- -r-------- -r-----r--
+F|/etc/shadow|root|root|.-rw------- -r-------- -rw------- ----------
+F|/etc/login.defs|root|root|.-rw-r--r-- -rw-r----- -rw------- ---------- -rw----r-- -r--r----- -r-------- -r-----r--
+F|/etc/pam.d/sshd|root|root|.-rw-r--r-- -rw-r----- -rw------- ---------- -rw----r-- -r--r----- -r-------- -r-----r--
+F|/etc/pam.d/login|root|root|.-rw-r--r-- -rw-r----- -rw------- ---------- -rw----r-- -r--r----- -r-------- -r-----r--
+F|/etc/pam.d/su|root|root|.-rw-r--r-- -rw-r----- -rw------- ---------- -rw----r-- -r--r----- -r-------- -r-----r--
+F|/var/log/wtmp|root|utmp|.-rw-r--r-- -rw-r----- -rw------- ---------- -rw----r-- -r--r----- -r-------- -r-----r--
+F|/etc/profile|root|root|.-rw-r--r-- -rw-r----- -rw------- ---------- -rw----r-- -r--r----- -r-------- -r-----r--
+F|/etc/bashrc|root|root|.-rw-r--r-- -rw-r----- -rw------- ---------- -rw----r-- -r--r----- -r-------- -r-----r--
+F|/etc/environment|root|root|.-rw-r--r-- -rw-r----- -rw------- ---------- -rw----r-- -r--r----- -r-------- -r-----r--
+D1|/var/spool/cron|*|root|.-rw------- ---------- -r--------
+U1|.bash_profile|*|*|.-rw-r--r-- -rw-r----- -rw------- ---------- -rw----r-- -r--r----- -r-------- -r-----r--
+U1|.bash_history|*|*|.-rw------- ----------

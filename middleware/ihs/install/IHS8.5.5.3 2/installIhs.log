@@ -1,0 +1,134 @@
+*****************************************************************************
+MY_HOME=/data/middleware
+RunUser=appoper
+IHS_Repository=http://10.3.1.214:8080/repository/repository.config
+IM_HOME=/data/middleware/InstallationManager
+IMShared_HOME=/data/middleware/IMShared
+IHS_HOME=/data/middleware/HTTPServer
+IHS_PORT=80
+PLG_HOME=/data/middleware/Plugins
+WCT_HOME=/data/middleware/ToolBox
+IHSConfigFile=/data/middleware/HTTPServer/conf/httpd.conf
+WEBSERVER_NAME=webserver1
+LOG_HOME=/data/middleware/HTTPServer/logs
+*****************************************************************************
+*****************************************************************************
+*	Step 1/7: create silent File...																						*
+*****************************************************************************
+ Info : >> create silent file Sucess: /data/middleware/install/IHS8.5.5.3/response/installIM.xml
+ Info : >> create silent file Sucess: /data/middleware/install/IHS8.5.5.3/response/installIHS.xml
+ Info : >> create silent file Sucess: /data/middleware/install/IHS8.5.5.3/response/installPLG.xml
+ Info : >> create silent file Sucess: /data/middleware/install/IHS8.5.5.3/response/installWCT.xml
+ Info : >> create silent file Sucess: /data/middleware/install/IHS8.5.5.3/response/configWCT.txt
+*****************************************************************************
+*	Step 2/7: install IM  begin .....*
+*****************************************************************************
+ Info : >> The directory /data/middleware/InstallationManager dose exist, IM install was not running 
+*****************************************************************************
+*	Step 3/7: install IHS  begin .....*
+*****************************************************************************
+                 25%                50%                75%                100%
+------------------|------------------|------------------|------------------|
+............................................................................
+已将 com.ibm.websphere.IHS.v85_8.5.5003.20140730_1249 安装到 /data/middleware/HTTPServer 目录。
+CRIMA1002W 警告：以下存储库未连接：
+-/data/middleware/install/WAS8.5.5.3/IM
+
+
+说明：未能连接到一个或多个存储库。存储库由于若干原因可能不可用。
+
+用户操作：检查以下各项：
+验证存储库位置是否正确。
+对于需要凭证的存储库，请验证凭证是否正确。可以在“存储库”首选项中设置凭证。
+验证网络连接是否可用。
+对于使用代理的环境，请验证代理设置是否正确。可以在 HTTP/FTP 首选项中设置代理设置。
+更新产品要求基本产品可用。请验证基本产品在存储库中是否可用。使用 listAvailablePackages 命令查看存储库中可用的软件包。
+如果您使用的是 IBM Passport Advantage 站点，请验证与该站点的连接是否正确。验证 Passport Advantage 首选项中的 Passport Advantage 连接。
+对于使用防火墙的环境，请验证对存储库位置的访问是否可用。
+警告：/data/middleware/install/WAS8.5.5.3/IM 不是存储库。它是 Installation Manager V1.8.3（内部版本 1.8.3000.20150606_0047） 的安装软件包。已安装 Installation Manager V1.8.3（内部版本 1.8.3000.20150606_0047）。
+ Info >> :	IHS install sucessed : com.ibm.websphere.IHS.v85_8.5.5003.20140730_1249
+*****************************************************************************
+*	Step 4/7: install PLG  begin .....*
+*****************************************************************************
+                 25%                50%                75%                100%
+------------------|------------------|------------------|------------------|
+............................................................................
+已将 com.ibm.websphere.PLG.v85_8.5.5003.20140730_1249 安装到 /data/middleware/Plugins 目录。
+CRIMA1002W 警告：以下存储库未连接：
+-/data/middleware/install/WAS8.5.5.3/IM
+
+
+说明：未能连接到一个或多个存储库。存储库由于若干原因可能不可用。
+
+用户操作：检查以下各项：
+验证存储库位置是否正确。
+对于需要凭证的存储库，请验证凭证是否正确。可以在“存储库”首选项中设置凭证。
+验证网络连接是否可用。
+对于使用代理的环境，请验证代理设置是否正确。可以在 HTTP/FTP 首选项中设置代理设置。
+更新产品要求基本产品可用。请验证基本产品在存储库中是否可用。使用 listAvailablePackages 命令查看存储库中可用的软件包。
+如果您使用的是 IBM Passport Advantage 站点，请验证与该站点的连接是否正确。验证 Passport Advantage 首选项中的 Passport Advantage 连接。
+对于使用防火墙的环境，请验证对存储库位置的访问是否可用。
+警告：/data/middleware/install/WAS8.5.5.3/IM 不是存储库。它是 Installation Manager V1.8.3（内部版本 1.8.3000.20150606_0047） 的安装软件包。已安装 Installation Manager V1.8.3（内部版本 1.8.3000.20150606_0047）。
+ Info >> :	Plugin install sucessed : com.ibm.websphere.PLG.v85_8.5.5003.20140730_1249
+*****************************************************************************
+*	Step 5/7: install WCT  begin .....*
+*****************************************************************************
+                 25%                50%                75%                100%
+------------------|------------------|------------------|------------------|
+............................................................................
+已将 com.ibm.websphere.WCT.v85_8.5.5000.20130514_1044 安装到 /data/middleware/ToolBox 目录。
+CRIMA1002W 警告：以下存储库未连接：
+-/data/middleware/install/WAS8.5.5.3/IM
+
+
+说明：未能连接到一个或多个存储库。存储库由于若干原因可能不可用。
+
+用户操作：检查以下各项：
+验证存储库位置是否正确。
+对于需要凭证的存储库，请验证凭证是否正确。可以在“存储库”首选项中设置凭证。
+验证网络连接是否可用。
+对于使用代理的环境，请验证代理设置是否正确。可以在 HTTP/FTP 首选项中设置代理设置。
+更新产品要求基本产品可用。请验证基本产品在存储库中是否可用。使用 listAvailablePackages 命令查看存储库中可用的软件包。
+如果您使用的是 IBM Passport Advantage 站点，请验证与该站点的连接是否正确。验证 Passport Advantage 首选项中的 Passport Advantage 连接。
+对于使用防火墙的环境，请验证对存储库位置的访问是否可用。
+警告：/data/middleware/install/WAS8.5.5.3/IM 不是存储库。它是 Installation Manager V1.8.3（内部版本 1.8.3000.20150606_0047） 的安装软件包。已安装 Installation Manager V1.8.3（内部版本 1.8.3000.20150606_0047）。
+ Info >> :	WCT install sucessed : com.ibm.websphere.WCT.v85_8.5.5000.20130514_1044
+*****************************************************************************
+*	Step 6/7: config WCT  begin .....*
+*****************************************************************************
+正在启动工具 pct ...
+
+工具执行已成功完成。
+
+ Info >> WCT config Sucessed!
+
+*****************************************************************************
+*	Step 7/6.5: mkdir logdir
+*****************************************************************************
+*****************************************************************************
+*	Step 7/7: config httpd.conf...*
+*****************************************************************************
+ Info >> Config  begin....
+*****************************************************************************
+*****************************************************************************
+ Info >> backup /data/middleware/HTTPServer/conf/httpd.conf to /data/middleware/HTTPServer/conf/httpd.conf.20160229185313.tar
+httpd.conf
+Info >> delete htdocsfiles.....
+Info >> Sucess
+	Info >> config ErrorLog and CustomLog.....
+	Info >> Sucess
+	Info >> change 'ServerSignature On' to  'ServerSignature Off'.....
+	Info >> Sucess
+	Info >> config 'Options XXXX' to 'Options None'.....
+		Info >> replay ' Options FollowSymLinks ' to 'Options None'
+		Info >> replay ' Options FollowSymLinks ' to 'Options None'
+		Info >> replay ' Options MultiViews ' to 'Options None'
+		Info >> replay ' Options None ' to 'Options None'
+	Info >> Sucess
+	Info >> config 'ServerTokens XXXX' to 'ServerTokens None'.....
+		Info >> replay ' ServerTokens Prod ' to 'ServerTokens Prod'
+	Info >> Sucess
+	Info >> config 'DefaultType None' to 'DefaultType text/plain'.....
+	Info >> Sucess
+ Info >> Config httpd.conf end
+	Info >> disableTrace is not run, please run is after you configured VirtualHost

@@ -1,0 +1,294 @@
+#!/bin/bash
+
+#add check role for --commond  [olny for root] 08/11/2013
+#add check role,role and its union is in "/home/ap/opscloud/conf/role.txt 08/15/2013
+#add getvalue  bug; if failed then return 1    08/15/2013
+#支持对部署单元的单个或多个主机操作            08/26/2013
+#支持推送单个脚本文件&满足前台java 的调用                        08/27/2013
+#添加超级用户ADMIN                             08/29/2013
+#
+#command line convert to pssh
+#
+#
+#syncfile apps --unit=unit1 --user=weblogic --path=bpm-1.3.1.tar.gz
+
+
+VERSION="V1.0"
+MY_COM_PATH="/home/ap/opscloud"
+MY_ROLE=`whoami`
+MY_ROAD="/data/apps"
+MY_TMP="app_temp"
+MY_STYLE="MC"
+MY_STRING=".mgt.bjdc.jh"
+MY_COMMON_FLAG="FALSE"
+MY_FLAG="FALSE"
+
+
+TIMESTAMP=`date +"%Y-%m-%d %H:%M:%S"`
+log_str="${TIMESTAMP} APP:[${MY_ROLE}] COMMON:[ $0 $@ ] RESULT:"
+
+Usage(){
+echo "Usage: $0  [option]"
+echo "1.syncfile apps --unit=unit1 --user=weblogic --path=bpm-1.3.1.tar.gz"
+echo "2.syncfile shells --unit=unit1 [--host=host1,host2] --user=weblogic"
+echo "3.syncfile shells --unit=unit1 --nascheck/--sa"
+echo "4.syncfile shells --unit=unit1 --common "
+echo "5.syncfile syscfg --unit=unit  [--host=host1,host2] --user=weblogic1 --file=bash_profile"
+echo "6.syncfile syscfg --unit=unit1 [--host=host1,host2] --type=httpd"
+}
+
+if [ $# -eq 0 ]
+then
+  Usage
+  exit 1
+fi
+MY_TYPE=`echo $1|tr "[a-z]" "[A-Z]"`
+
+if [ $3 = "--common" -o $3 = "--health" -o $3 = "--audit" -o $3 = "--security" -o $3 = "--nascheck" -o $3 = "--sa" ] 
+then
+#MY_COMMON="common_shells"
+MY_COMMON="${3##--}"
+MY_COMMON_FLAG="TRUE"
+ARGS=`getopt -a -o "u:" --long unit: -- "$2"`
+eval set -- "${ARGS}"
+else
+ARGS=`getopt -a -o "uhj:s:p:f:t:" --long unit:,host:,user:,path:,file:,type:,json: -- "$@"`
+eval set -- "${ARGS}"
+fi
+
+while true
+do
+    case "$1" in
+    --unit)
+	MY_UNIT="$2"
+        MY_UNIT_CLOUD="${MY_UNIT}server_online"
+	shift
+	;;
+    --host)
+	    MY_XHOSTS="$2"
+	    shift
+	    ;;
+    --user)
+		MY_USER="$2"
+		shift
+		;;
+    --path)
+		MY_PATH="$2"
+		shift
+		;;
+	--file)
+       MY_FILE="$2"
+       shift
+		;;
+    --type)
+       MY_ITYPE="$2"
+       shift
+		;;
+    --json)
+		MY_J="TRUE"
+		shift
+		;;
+    --)  
+		shift  
+		break 
+		;;  
+	esac  
+  shift
+done
+
+
+
+if [ ! -z "$MY_UNIT" ]
+then
+	MY_HOSTS=`hostinfo --showhosts --unit=${MY_UNIT}`
+	if [ $? -ne 0  ]
+	then
+		echo "部署单元$MY_UNIT不存在,或者部署单元拼写有误" 
+		exit 1
+	fi 
+	R_ROLE=`hostinfo --showsys --unit=${MY_UNIT}|sed 's/\"//g'`
+	if [ $MY_ROLE != $R_ROLE  ] && [ ${MY_ROLE} != "root" ] && [  ${MY_ROLE} != "admin" ]
+	then
+        echo "当前用户${MY_ROLE} 没有管理部署单元${MY_UNIT}的权限"
+        exit 1
+	fi
+	if [ X"$MY_XHOSTS" != X ]
+	then
+		MY_UHOSTS=`echo $MY_XHOSTS |tr "," " "` 
+		for i in $MY_UHOSTS 
+		do 
+			MY_HOST=${i%"$MY_STRING"}${MY_STRING} 
+			n=`echo $MY_HOSTS|egrep -wi $MY_HOST|wc -l` 
+			if [ $n -eq 0 ] 
+			then 
+				echo "设备$i在部署单元$MY_UNIT中不存在" 
+				exit 1 
+			fi 
+        MY_HOSTS_LIST=${MY_HOSTS_LIST}" -I $MY_HOST" 
+		done
+	else
+		for i in $MY_HOSTS
+		do
+			MY_HOST=${i%$MY_STRING}${MY_STRING}
+			MY_HOSTS_LIST=${MY_HOSTS_LIST}" -I $MY_HOST"
+		done
+	fi
+    if [ X"$MY_USER" = "Xroot" ]  
+	then	
+		echo "--user 不能指定root"	
+		exit 1  
+	fi
+else
+    echo "syncfile 命令需要指定部署单元"
+    exit 1	
+fi
+
+
+
+#分发应用包
+if [ "$MY_TYPE" = "APPS" ]
+then
+	if [ ! -n "$MY_UNIT" ] || [ ! -n "$MY_USER" ]
+	then
+		Usage
+		exit 1
+	fi
+	if [ $MY_STYLE = "MC" ]
+	then
+		MY_PATH=${MY_PATH%*/}
+		MY_HOSTS_LIST=`echo $MY_HOSTS_LIST|sed 's/-I/ /g'`
+		if [ $MY_ROLE = "admin" ]
+		then
+			eval sudo prsync -rz -X --chmod=D+X,Fo-w,F-X -O \"StrictHostKeyChecking=no\" -e /tmp -H \"$MY_HOSTS_LIST\" /tmp/bin /tmp/
+		else
+			if [ x"${MY_PATH}" != x ]
+			then
+				#if [ "${MY_PATH%tar}" != "${MY_PATH}" ] || [ "${MY_PATH%tar.gz}" != "${MY_PATH}" ] || [ "${MY_PATH%tar.bz2}" != "${MY_PATH}" ] || [ "${MY_PATH%tgz}" != "${MY_PATH}" ] || [ "${MY_PATH%rar}" != "${MY_PATH}" ] || [ "${MY_PATH%zip}" != "${MY_PATH}" ]
+				#then
+				if [ -f ${MY_ROAD}/${MY_ROLE}/${MY_UNIT}/${MY_USER}/${MY_PATH} ]
+				then
+					eval sudo prsync -rz -X --chmod=Fo-w,-X -O \"StrictHostKeyChecking=no\" -e /tmp -H \"$MY_HOSTS_LIST\" ${MY_ROAD}/${MY_ROLE}/${MY_UNIT}/${MY_USER}/${MY_PATH} /home/ap/${MY_USER}/${MY_TMP}/${MY_PATH}
+				else
+					echo "--path 指定的文件${MY_PATH}不存在"
+					exit 1
+				fi
+              # else
+			  #		 echo "云平台文件传输只支持tar,tar.gz,tar.bz2,tgz,rar,zip的压缩包"	    	     
+			  #		 exit 1
+              #    fi
+            else
+				Usage
+				exit 1
+			fi
+        fi
+       
+	else
+     MY_HOSTS_LIST=`echo $MY_HOSTS_LIST|sed 's/-I/ /g'`
+     MY_PATH=${MY_PATH%*/}
+     eval  sudo prsync -rz -X --chmod=Fo-w,-X -O \"StrictHostKeyChecking=no\" -e /tmp -H \"$MY_HOSTS_LIST\" ${MY_ROAD}/${MY_ROLE}/${MY_UNIT}/${MY_USER}/${MY_PATH} /home/ap/${MY_USER}/${MY_TMP}/${MY_PATH}
+	fi
+   
+fi
+
+#同步脚本目录
+if [ "$MY_TYPE" = "SHELLS" ]
+then
+
+  #syncfiles shells --unit=unit1 --common
+  #pssh -i -H $host puppet runonce --tag common_shells
+	if [ "$MY_COMMON_FLAG" = "TRUE" ]
+	then
+		if [ "${MY_ROLE}" = "root" ] || [ "${MY_ROLE}" = "admin" ]
+		then
+			if [ $MY_STYLE = "MC" ]
+			then
+				DEST_PATH=$MY_COMMON        
+				if [ $MY_COMMON = "common" ]		
+				then			
+					DEST_PATH=bin		
+					SOURCE_PATH=common
+					MY_STREAM=`eval mco puppetapply -j \'file{\"/home/ap/opscloud/$DEST_PATH\"\:source=\>\"puppet://puppet/shells/$SOURCE_PATH\"\,owner=\>root\,group=\>group\(root\)\,sourceselect=\>all\,recurse=\>remote}\' $MY_HOSTS_LIST`
+				fi
+			else
+				eval sudo pssh -i -O \"StrictHostKeyChecking=no\" -e /tmp -H \"$MY_HOSTS\" puppet agent -t --tags $MY_COMMON
+			fi
+		else
+			if [ $MY_COMMON = "nascheck" ]
+            then
+                DEST_PATH=nas_check
+				SOURCE_PATH=nas_check
+				MY_STREAM=`eval sudo mco puppetapply -j \'file{\"/home/ap/opscloud/bin/$DEST_PATH\"\:source=\>\"puppet://puppet/shells/$SOURCE_PATH\"\,owner=\>root\,sourceselect=\>all\,recurse=\>remote}\' $MY_HOSTS_LIST`
+            fi
+			if [ $MY_COMMON = "sa" ]
+			then
+				DEST_PATH=sa
+				SOURCE_PATH=sa
+				MY_STREAM=`eval sudo mco puppetapply -j \'file{\"/home/ap/$DEST_PATH\"\:source=\>\"puppet://puppet/shells/$SOURCE_PATH\"\,owner=\>sa\,group=\>group\(sa\)\,mode=\>755\,recurse=\>remote}\' $MY_HOSTS_LIST`
+			fi
+		fi
+	else
+		if  [ ! -n "$MY_UNIT" ] || [ ! -n "$MY_USER" ]
+		then
+			Usage
+			exit 1
+		fi
+		if [ $MY_STYLE = "MC" ]
+		then
+			if [ x"$MY_PATH" != x ]
+			then
+			    MY_SPATH=/home/ap/${MY_USER}/bin/${MY_PATH}
+			    MY_SPATH=${MY_SPATH%/*}
+	            eval sudo mco puppetapply \'exec{\"mkdir -p ${MY_SPATH}\"\: logoutput=\>true\,path=\>\"/bin:/usr/bin\"\,provider=\>\"shell\"}\'$MY_HOSTS_LIST >/dev/null			   
+		    fi
+			MY_STREAM=`eval sudo mco puppetapply -j \'file{\"/home/ap/${MY_USER}/bin/${MY_PATH}\"\:source=\>\"puppet://puppet/shells/${MY_ROLE}/${MY_UNIT}/${MY_USER}/${MY_PATH}\"\,owner=\>${MY_USER}\,group=\>group\(${MY_USER}\)\,mode=\>755\,recurse=\>remote}\' $MY_HOSTS_LIST`
+		else
+			eval sudo pssh -i -O \"StrictHostKeyChecking=no\" -e /tmp -H \"$MY_HOSTS\" puppet resource file \"/home/ap/$MY_USER/bin\" source=\"puppet:///shells/${MY_ROLE}/${MY_UNIT}/${MY_USER}\" owner=root group=root mode=555 recurse=true
+		fi
+	fi
+fi
+
+
+#分发配置文件 如httpd，.bash_profile
+if [ "$MY_TYPE" = "SYSCFG" ]
+then
+	#.bash_profile
+	if [ x"$MY_FILE" != "x" ]
+	then
+		if [ ! -n "$MY_UNIT" ] || [ ! -n "$MY_USER" ]
+		then
+			Usage
+			exit 1
+		fi
+		if [ $MY_STYLE = "MC" ]
+		then
+			MY_FILE=${MY_FILE%*/}
+			#同步bash_profile
+			#20130826
+			#MY_STREAM=`eval sudo mco puppet resource  file \"/home/ap/${MY_USER}/.${MY_FILE}\" source=\"puppet:///syscfg/${MY_ROLE}/${MY_UNIT}/${MY_USER}/.${MY_FILE}\" owner=${MY_USER}  mode=600 recurse=remote $MY_HOSTS_LIST`
+			#$MY_COM_PATH/bin/json.rb "$MY_STREAM"
+			MY_STREAM=`eval sudo mco puppetapply -j \'file{\"/home/ap/${MY_USER}/.${MY_FILE}\"\:source=\>\"puppet://puppet/syscfg/${MY_ROLE}/${MY_UNIT}/${MY_USER}/${MY_FILE}\"\,owner=\>${MY_USER}\,group=\>group\(${MY_USER}\)\,mode=\>600\,recurse=\>remote}\'  $MY_HOSTS_LIST`
+			#$MY_COM_PATH/bin/json.rb "$MY_STREAM"
+		else
+			MY_FILE=${MY_FILE%*/}
+			eval sudo pssh -i -O \"StrictHostKeyChecking=no\" -e /tmp -H \"$MY_HOSTS\" puppet resource file \"/home/ap/$MY_USER/\" source=\"puppet:///syscfg/${MY_ROLE}/${MY_UNIT}/${MY_USER}/${MY_FILE}\" owner=${MY_USER} mode=600 recurse=remote
+		fi
+	#httpd
+	elif [ "$MY_ITYPE" = "httpd" ] || [ "$MY_ITYPE" = "squid" ]
+	then
+		#同步httpd 文件
+		#20130826
+		#eval sudo mco puppet resource  file \"/etc/$MY_ITYPE\" source=\"puppet:///syscfg/${MY_ROLE}/${MY_UNIT}/$MY_ITYPE\" owner=root group=root  mode=644 recurse=remote $MY_HOSTS_LIST
+		MY_STREAM=`eval sudo mco puppetapply -j \'file{\"/etc/$MY_ITYPE\"\:source=\>\"puppet://puppet/syscfg/${MY_ROLE}/${MY_UNIT}/$MY_ITYPE\",recurse=\>true,owner=\>501, group=\>500,mode=\>644}\' $MY_HOSTS_LIST`
+		#$MY_COM_PATH/bin/json.rb "$MY_STREAM"
+	fi
+ 
+fi
+
+#json reslut
+if [ x"$MY_J" = x"TRUE" ]
+then
+	echo $MY_STREAM
+else
+	echo $log_str $MY_STREAM >> $MY_COM_PATH/logs/common_line.log
+	$MY_COM_PATH/bin/json.rb "$MY_STREAM"
+fi

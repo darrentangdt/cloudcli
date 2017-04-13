@@ -1,0 +1,79 @@
+*****************************************************************************
+MY_HOME=/data/middleware
+RunUser=was
+WAS_Repository=http://10.0.2.14:8080/repository.config
+IM_HOME=/data/middleware/InstallationManager
+IMShared_HOME=/data/middleware/IMShared
+WAS_HOME=/data/middleware/WebSphere/AppServer
+CreateProfile=true
+ProfileName=AppSrv01
+ProfilePath=/data/middleware/WebSphere/AppServer/profiles/AppSrv01
+NodeName=hfnode
+CellName=hfcell
+HostName=hfapp
+ServerName=server1
+AdminUserName=was
+AdminPassword=Was123
+*****************************************************************************
+*****************************************************************************
+*	Step 1/4: create silent File...																						*
+*****************************************************************************
+ Info : >> create silent file Sucess: /data/middleware/install/WAS8.5.5.3/response/installIM.xml
+ Info : >> create silent file Sucess: /data/middleware/install/WAS8.5.5.3/response/installWAS.xml
+*****************************************************************************
+*	Step 2/4: install IM  begin .....*
+*****************************************************************************
+                 25%                50%                75%                100%
+------------------|------------------|------------------|------------------|
+............................................................................
+Installed com.ibm.cic.agent_1.8.3000.20150606_0047 to the /data/middleware/InstallationManager/eclipse directory.
+ Info >> :	IM install sucessed : com.ibm.cic.agent_1.8.3000.20150606_0047
+*****************************************************************************
+*	Step 3/4: install WAS  begin .....*
+*****************************************************************************
+                 25%                50%                75%                100%
+------------------|------------------|------------------|------------------|
+............................................................................
+Installed 8.5.5.0-WS-WAS-IFPI52103_8.5.5000.20151112_0822 to the /data/middleware/WebSphere/AppServer directory.
+Installed com.ibm.websphere.BASE.v85_8.5.5003.20140730_1249 to the /data/middleware/WebSphere/AppServer directory.
+CRIMA1002W WARNING: The following repositories are not connected:
+-/data/middleware/install/WAS8.5.5.3/IM
+
+
+Explanation: Failed to connect to one or more repositories. The repository might be unavailable for several reasons.
+
+User Action: Check the following items:
+Verify the repository location is correct.
+For repositories that require credentials, verify that the credentials are correct. Credentials can be set in the Repositories preference.
+Verify the network connection is available. 
+For environments that use proxies, verify the proxy settings are correct. Proxy settings can be set in the HTTP/FTP preference.
+Update offerings require that base offerings be available. Verify the base offering is available in a repository. Use the listAvailablePackages command to view the packages available in a repository.
+If you are using the IBM Passport Advantage site, verify the connection to the site is correct. Verify the Passport Advantage connection in the Passport Advantage preference.
+For environments that use firewalls, verify that access to the repository location is available.
+WARNING: /data/middleware/install/WAS8.5.5.3/IM is not a repository. It is an install package for Installation Manager version 1.8.3 (internal version 1.8.3000.20150606_0047). Installation Manager version 1.8.3 (internal version 1.8.3000.20150606_0047) is already installed.
+ Info >> :	WAS install sucessed : com.ibm.websphere.BASE.v85_8.5.5003.20140730_1249
+*****************************************************************************
+*	Step 4/4: create Profile..																						*
+*****************************************************************************
+*****************************************************************************
+MY_HOME=/data/middleware
+RunUser=was
+WAS_Repository=http://10.0.2.14:8080/repository.config
+IM_HOME=/data/middleware/InstallationManager
+IMShared_HOME=/data/middleware/IMShared
+WAS_HOME=/data/middleware/WebSphere/AppServer
+CreateProfile=true
+ProfileName=AppSrv01
+ProfilePath=/data/middleware/WebSphere/AppServer/profiles/AppSrv01
+NodeName=hfnode
+CellName=hfcell
+HostName=hfapp
+ServerName=server1
+AdminUserName=was
+AdminPassword=Was123
+*****************************************************************************
+Start to create profile 
+INSTCONFSUCCESS: Success: Profile AppSrv01 now exists. Please consult /data/middleware/WebSphere/AppServer/profiles/AppSrv01/logs/AboutThisProfile.txt for more information about this profile.
+Profile creation successful
+
+ Info >> WAS Installed Sucessed!

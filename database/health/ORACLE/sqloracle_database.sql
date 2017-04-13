@@ -1,0 +1,6 @@
+set linesize 300
+col PLATFORM_NAME for a30
+col PROTECTION_MODE for a30
+SET SQLPROMPT "SQL>";
+select DBID,name,LOG_MODE,VERSION_TIME ,OPEN_MODE,PROTECTION_MODE  from v$database;
+quit

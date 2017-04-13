@@ -1,0 +1,11 @@
+V_AIX_SEC_PASSEXPIRY_pwdwarntime=7
+V_AIX_SEC_PASSEXPIRY_maxage=8
+V_AIX_SEC_PASSEXPIRY_minlen=8
+V_AIX_SEC_PASSEXPIRY_minalpha=1
+V_AIX_SEC_PASSEXPIRY_minother=1
+V_AIX_SEC_PASSEXPIRY_loginretriese=10
+F|/etc/passwd|root|security|.-rw-r--r-- -rw-r----- -rw-------
+F|/etc/group|root|security|.-rw-r--r-- -rw-r----- -rw-------
+F|/etc/security/passwd|root|security|.-rw-------
+F|/etc/security/user|root|security|.-rw-r----- -rw-------
+F|/var/adm/wtmp|adm|adm|.-rw-r--r-- -rw-r----- -rw-------

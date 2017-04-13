@@ -1,0 +1,10 @@
+configType="remote"
+webServerConfigFile1="#IHSConfigFile#"
+webServerSelected=ihs
+webServerPortNumber="#IHS_PORT#"
+webServerDefinition="#WEBSERVER_NAME#"
+wasMachineHostName="ebankapp"
+mapWebserverToApplications="true"
+webServerHostName=""
+webServerInstallArch="64"
+webServerType="IHS"

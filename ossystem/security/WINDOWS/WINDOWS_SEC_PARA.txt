@@ -1,0 +1,26 @@
+V_WINODWS_SEC_ACCOUNTLOGIN_AuditSystemsEvents=1
+V_WINODWS_SEC_ACCOUNTLOGIN_AuditLogonEvents=3
+V_WINODWS_SEC_ACCOUNTLOGIN_AuditObjectAccess=2
+V_WINODWS_SEC_ACCOUNTLOGIN_AuditPrivilegeUse=2
+V_WINODWS_SEC_ACCOUNTLOGIN_AuditPolicyChange=1
+V_WINODWS_SEC_ACCOUNTLOGIN_AuditAccountManage=3
+V_WINODWS_SEC_ACCOUNTLOGIN_AuditDSAccess=2
+V_WINODWS_SEC_ACCOUNTLOGIN_AuditAccountLogon=3
+V_WINODWS_SEC_PASSWORD_MaximumPasswordAge=60
+V_WINODWS_SEC_PASSWORD_MinimumPasswordLength=6
+V_WINODWS_SEC_PASSWORD_PasswordHistorySize=10
+V_WINODWS_SEC_PASSEXPIRE_PasswordExpiryWarning=0
+V_WINODWS_SEC_LAN_LmCompatibilityLevel=5
+V_WINODWS_SEC_DEVICE_AllocateDASD=0
+V_WINODWS_SEC_AUTORUN_NoDriveTypeAutoRun=0xb5 0xff
+V_WINODWS_SEC_SCREENPASS_ScreenSaveTimeOut=300
+SECK|Task Scheduler|Schedule
+SECK|Remote Registry|RemoteRegistry
+SECK|Print Spooler|Spooler
+SECK|Computer Browser|Browser
+SECK|TCP/IP NetBIOS Helper|lmhosts
+SECK|WinHTTP Web Proxy Auto-Discovery Service|WinHttpAutoProxySvc
+SECK|Routing and Remote Access|RemoteAccess
+SECK|Server|LanmanServer
+SECK|Telnet|TlntSvr
+SECK|DHCP Client|Dhcp

@@ -1,0 +1,7 @@
+F|/etc/passwd|root|security|.-rw-r--r-- -rw-r----- -rw------- -rw----r-- -r--r----- -r-------- -r--r--r-- -r-----r-- ----------
+F|/etc/group|root|security|.-rw-r--r-- -rw-r----- -rw------- -rw----r-- -r--r----- -r-------- -r--r--r-- -r-----r-- ----------
+F|/etc/default/security|root|security|.-rw-r--r-- -rw-r----- -rw------- -rw----r-- -r--r----- -r-------- -r--r--r-- -r-----r-- ----------
+F|/etc/pam.conf|root|sys|.-r--r----- -r-------- -r--r--r-- -r-----r-- ----------
+F|/var/adm/btmp|adm|adm|.-r-------- ----------
+F|/dev/kmem|bin|sys|.-rw-r----- -rw------- -r-------- ----------
+F|/dev/mem|bin|sys|.-rw-r----- -rw------- -r-------- -r--r----- ----------

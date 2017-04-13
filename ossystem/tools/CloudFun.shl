@@ -1,0 +1,555 @@
+#  add  UNC_FLAG,DIST_FLAG,      2013/8/11
+#  init global parameter,  -v version,-u deploy union,-m modify
+#
+
+################################################################################
+# Changes stdout and stderr to go to the output log.
+################################################################################
+redirect_output()
+{
+   local OUTPUT_LOG=$1
+   # Save off this script's stdout and stderr, then redirect
+   # this script's stdout and stderr to go to a log file.
+   exec 3>&1 4>&2
+   exec > $OUTPUT_LOG 2>&1
+}
+
+restore_output()
+{
+    # Restore the script's stdout and stderr, and close the temporary
+    # file descriptors.
+    exec 1>&3 3>&- 2>&4 4>&-
+}
+
+################################################################################
+# Determines if the backup disk is mounted, and sets the IS_MOUNTED global.
+################################################################################
+is_mounted()
+{
+   local DESTINATION_MOUNT=$1
+   echo "Checking if $DESTINATION_MOUNT is already mounted"
+   MOUNTED=`cat /proc/mounts | cut -d' ' -f2 | grep "$DESTINATION_MOUNT"`
+   echo "Result: $MOUNTED"
+   if [ -z "$MOUNTED" ]; then
+      IS_MOUNTED=0
+   else
+      IS_MOUNTED=1
+   fi
+}
+
+################################################################################
+# Starts the backup. check for env for r
+################################################################################
+start_backup()
+{
+
+   # Only start if a lock isn't being held.
+   if [ -e $LOCK_FILE ]; then
+       # Exit if the process that created the lock is still running
+       LOCK_PID=`cat $LOCK_FILE`
+       if [ -n "$LOCK_PID" ]; then
+	   FOUND_PROCESS=`ps --pid $LOCK_PID -o comm=`
+	   # TODO: process should also be a backup process.
+	   if [ -n "$FOUND_PROCESS" ]; then
+	       echo "Backup didn't run because another backup ($LOCK_PID) is still running"
+	       exit 0
+	   else
+	       echo $$ > $LOCK_FILE
+	   fi
+       else
+	   echo $$ > $LOCK_FILE
+       fi
+   else
+       echo $$ > $LOCK_FILE
+   fi
+
+   redirect_output $OUTPUT_LOG
+   echo "Backup started on `date`"
+
+   # If the $DESTINATION_MOUNT directory doesn't exist then create it.
+   echo "Ensuring that $DESTINATION_MOUNT exists"
+   mkdir --parents $DESTINATION_MOUNT
+
+
+   # The exclusion file tells rsync what to ignore. Create it if we need to.
+   if [ ! -e $RSYNC_EXCLUDE_FILE ]; then
+       touch $RSYNC_EXCLUDE_FILE
+   fi
+   
+}
+
+################################################################################
+# Ends the backup script gracefully. Syncs disk buffers before unmounting
+# the backup mount and calling exit.
+#
+# Params:
+#   Exit status (e.g. 0 for success)
+################################################################################
+end_backup()
+{
+    # Ensure that disk buffers are written before backup end;
+    sync
+    sleep 2
+
+    rm -f $LOCK_FILE
+
+    echo "Backup ended on `date`"
+
+    restore_output
+
+    exit $1
+}
+
+
+################################################################################
+# Ends the backup script gracefully. Syncs disk buffers before unmounting
+# the backup mount and calling exit.
+#
+# Params:
+#   Exit status (e.g. 0 for success)
+################################################################################
+end_backup()
+{
+    # Ensure that disk buffers are written before backup end;
+    sync
+    sleep 2
+
+    rm -f $LOCK_FILE
+
+    echo "Backup ended on `date`"
+
+    exit $1
+}
+
+end_restore()
+{
+    # Ensure that disk buffers are written after restore end;
+    sync
+    sleep 2
+
+    rm -f $LOCK_FILE
+
+    echo "Restore ended on `date`"
+
+    exit $1
+}
+
+################################################################################
+# Syncs filesystems using rsync with arguments for preserving file ownership,
+# permissions, etc. If the destination doesn't exist then it creates it.
+#
+# Params:
+#   Source directory (e.g. /home)
+#   Destination directory (e.g. /mnt/backup/hostname_distro_version)
+#   File used to exclude synchronization of specific files and directories.
+#
+#   If the source directory is /home, and the destination directory is
+#   /mnt/backup/, then the result will be a copy of /home in /mnt/backup/home
+################################################################################
+rsync_files()
+{
+    src=$1
+    dest=$2
+    exclude=$3
+
+
+    /usr/bin/rsync --verbose \
+       --relative \
+	   --backup \
+       --archive \
+       --hard-links \
+       --sparse \
+       --numeric-ids \
+       --delete \
+       --delete-excluded \
+       --delete-after \
+       $src $dest \
+       --exclude-from=$exclude
+
+}
+
+################################################################################
+ctrl_c()
+{
+   backup_failed "Backup was interrupted before it could complete."
+}
+
+
+#
+# convert lower to upper [a-z] to [A-Z]
+#
+toupper() {
+    echo "$1" | tr '[:lower:]' '[:upper:]'
+}
+
+#
+# returns 0 if a variable is defined (set) and value's length > 0
+# returns 1 otherwise
+has_value() {
+    if defined $1; then
+        if [[ -n ${!1} ]]; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+
+#
+# returns 0 if a directory exists
+# returns 1 otherwise
+#
+is_directory() {
+    if [[ -d "$1" ]]; then
+        return 0
+    fi
+    return 1
+}
+#
+# returns 0 if a directory exists
+# returns 1 otherwise
+#
+is_file (){
+    if [[ -f "$1" ]]
+	then
+	   return 1
+	fi
+	return 0
+}
+##############################################################################################
+#compress file
+#tar .
+##################################################################
+file_compress(){
+source=$1
+dest=$2
+distribute="distribute"
+if [[  $source == "COMPRESS_FILE.txt" ]]
+then 
+  cat $source |while read line
+  do
+  dirname=${line%/*}
+  destname=${line##*/}
+  cd $dirname
+  tar rvf /tmp/${distribute}.tar $destname
+  done
+  cd /tmp
+  tar -czvf ${distribute}.tgz ${distribute}.tar > /dev/null
+  [ $dest != `pwd` ] &&  mv /tmp/${distribute}.tgz ${dest} >/dev/null
+  rm /tmp/${distribute}.tar
+else
+  echo "please provide COMPRESS.txt file"
+fi
+#elif [[ -f $source ]]
+#then
+#  tar -rvf ${distribute}.tar $source
+#  tar -czvf ${distribute}.tgz ${distribute}.tar > /dev/null
+#  rm ${distribute}.tar
+#  [ $dest != `pwd` ] && mv ${distribute}.tgz $dest >/dev/null
+#elif [[ -d $source ]]
+#then
+#  cd $source
+#  ls |tar -rvf ${distribute}.tar *
+#  tar -czvf ${distribute}.tgz ${distribute}.tar > /dev/null
+#  rm ${distribute}.tar
+#  [ $dest != `pwd` ] && mv ${distribute}.tgz ${dest} >/dev/null
+#fi
+}
+
+#
+# os style  LINUX,AIX,HP-UX
+os_style(){
+os_ver=`uname`
+toupper $os_ver
+}
+
+
+#
+# MD5 FOR ALL UNIX/LINUX OS
+#
+get_md5(){
+command=
+OS=`os_style`
+case $OS in
+    "LINUX") command="md5sum"
+	;;
+	"AIX") command="csum"
+	;;
+	"HP-UX") command="openssl md5"
+	;;
+	*)
+	break
+	;;
+  esac
+eval $command $1|awk '{print $1}'
+}
+
+
+#
+#return file real path,contain soft link;
+#
+simple_readlink()
+{
+TARGET_FILE=$1
+
+cd `dirname $TARGET_FILE`
+TARGET_FILE=`basename $TARGET_FILE`
+
+# Iterate down a (possible) chain of symlinks
+while [ -L "$TARGET_FILE" ]
+do
+    TARGET_FILE=`readlink $TARGET_FILE`
+    cd `dirname $TARGET_FILE`
+    TARGET_FILE=`basename $TARGET_FILE`
+done
+
+# Compute the canonicalized name by finding the physical path 
+# for the directory we're in and appending the target file.
+PHYS_DIR=`pwd -P`
+RESULT=$PHYS_DIR/$TARGET_FILE
+echo $RESULT
+}
+
+#############
+#
+# unzip tool  
+#  
+####
+
+uncompress()
+{
+    os_style=`uname`
+    case "$os_style" in
+		Linux) 
+			tar zxf "$1"
+	        ;;
+		AIX|HP-UX)
+			gzip -df "$1"
+			;;
+		*)
+			break
+			;;
+    esac
+	if [ $? -eq 0 ]
+	then
+		writeLog 3 "`now_str` package  uncompress successful "
+	else
+		writeLog 2 "`now_str` package  uncompress failed "  
+		let UNC_FLAG=UNC_FLAG+1
+	fi
+    [ -f ${1%.tgz}.tar ] && tar -xf "${1%.tgz}.tar"
+}
+
+# ##############################
+# $1 warning level 1,2,3
+# $2 log message
+#
+writeLog(){
+        if [ $1 -eq 1 ]
+        then
+                echo  "LOG [WARNING]"$2"\n" >>$LOG_DIR
+        fi
+        if [ $1 -eq 2 ] 
+        then
+                echo  "LOG [ERROR  ]"$2"\n">>$LOG_DIR
+         fi
+        if [ $1 -eq 3 ]
+        then
+                echo  "LOG [INFO   ]"$2"\n">>$LOG_DIR
+        fi
+}
+
+
+getOsVersion() {
+	result=`uname`	
+        if [ $result = "AIX" ];then return 1;fi
+        if [ $result = "HP-UX" ];then return 2;fi
+        if [ $result = "LINUX" ];then
+                return 3;
+        else
+                return 4;
+        fi
+}
+
+#change owner and group
+#
+
+#release/twist.log,/tmp,opsware:opsware,766
+#update 2013/8/7  first chmod second chown;
+cp_files(){
+        sourcepath=${TMP_DIR}/$1
+        destpath=`echo $2|sed 's/\/$//g'`"/"
+        if [  -d ${sourcepath} -o  -f ${sourcepath} ]
+        then
+			cp -rfp ${sourcepath} ${destpath}
+			if [ $? -ne 0 ]
+			then
+				writeLog 2 "Sourcefile : ${sourcepath} is not distributed Destination : ${destpath}$1"
+				DIST_FLAG=$((DIST_FLAG + 1))
+			else
+				writeLog 3 "Sourcefile : ${sourcepath} is distributed Destination : ${destpath}"
+			fi
+        else
+			writeLog 1 "SourcePath file: ${sourcepath} dosen't exists!"
+			DIST_FLAG=$((DIST_FLAG + 1))
+        fi
+}
+
+#check md5
+check_md5(){
+	sourcepath=$1
+	destpath=$2
+    find $sourcepath -type f -name "*" |while read line
+	do
+		sourcefile="${TMP_DIR}/$line"
+		if [ `echo ${sourcepath} |grep '\/'` ]	
+		then
+			headline=${sourcepath%/*}
+			tailline=${line##${headline}/}
+			destfile=${destpath}/${tailline}
+		else
+			destfile=${destpath}/$line
+		fi
+		source_md5=`get_md5 "$sourcefile"`
+		dest_md5=`get_md5 "$destfile"`
+		if [[ $dest_md5 != $source_md5 ]]
+		then
+			writeLog 1 "sourcefile: ${sourcefile}, destfile :${destfile}  md5 not same"
+			echo "sourcefile: ${sourcefile}, destfile :${destfile}  md5 not same"
+			MD5_SUM=$(($MD5_SUM+1))
+		else
+			writeLog 3 "sourcefile: ${sourcefile} is the same of destfile :${destfile}"
+		fi	
+	done
+}
+
+##
+# time 
+#
+now_str(){
+    localtime=`date +"%Y-%m-%d %H:%M:%S"`
+	echo $localtime
+}
+
+start_distribute(){
+   if [ -e $LOCK_FILE ]; then
+       # Exit if the process that created the lock is still running
+       LOCK_PID=`cat $LOCK_FILE`
+       if [ -n "$LOCK_PID" ]; then
+	   FOUND_PROCESS=`ps --pid $LOCK_PID -o comm=`
+	   # TODO: process should also be a backup process.
+	   if [ -n "$FOUND_PROCESS" ]; then
+	       writeLog 1 "Distribute didn't run because another Distribute ($LOCK_PID) is still running"
+	       exit 0
+	   else
+	       echo $$ > $LOCK_FILE
+	   fi
+       else
+	   echo $$ > $LOCK_FILE
+       fi
+   else
+       echo $$ > $LOCK_FILE
+   fi
+}
+
+#clear  files
+#clear_files filelist
+#
+
+clear_files(){
+  dest_file=${TMP_DIR}/${1}
+  if [ -f $dest_file -o -d $dest_file ]
+  then
+  rm -rf $dest_file
+  else
+   writeLog 3 "${dest_file} is not exit" 
+  fi
+}
+
+timeout(){
+waitfor=$TIME_OUT
+command=$*
+$command &
+commandpid=$!
+( sleep $waitfor ;kill -9 $commandpid > /dev/null 2>&1 && exit 1) &
+if [ $? = 1 ]
+then
+   writeLog 2 "$1 Timeout" ;
+fi
+watchdog=$!
+sleeppid=$PPID
+wait $commandpid > /dev/null 2>&1
+kill $sleeppid > /dev/null 2>&1
+}
+
+
+
+
+#check  str1 is include str2
+#substr "ThisIsAString" "SUBString" # should output N
+#substr "ThisIsAString" "String" # should output Y
+#
+
+substr (){
+    STRING=$1
+    SUBSTRING=$2
+
+    if [[ ${STRING/${SUBSTRING}/} == $STRING ]]
+    then
+        ## is not substring.
+        echo 0
+    else
+        ## is substring.
+        echo 1
+    fi
+}
+
+#
+#检查分发配置文件格式。
+#DISTRIBUTE.cfg
+#---------------------------
+#sqloracle_archive_check.sql,/home/ap/opsware/,oracle:dba,744
+#RUNSTATUS,/home/ap/,oracle:dba,755
+#SECURITY,/home/ap/,cognos:cognos,755
+#分为4段，分别是"源文件"，"目标文件"，"数组"，"权限";中间用逗号","隔开
+check_pacage(){
+cat $1 |while read line
+do
+  echo $line
+done
+}
+
+parameter()
+{
+   str=$1
+   str=`echo $str|sed 's/\/$//g'`/
+   echo $str/
+}
+
+
+#backup files version control
+#rec=5 store backfiles;
+#tar old version backupfile path
+
+clear_bk_version(){
+  #clear $version >= 5;
+  bk_name=$1
+  version=${bk_name##.}
+  if [ ${version} -ge 5 ];then
+    re=`rm -rf ${bk_name}`
+    if [ $? -ne 0 ];then
+      return false
+    else
+      return true
+    fi
+  fi
+}
+
+#mv 01->02
+update_bk_version(){
+  bk_name=$1
+  cur_version=${bk_name##.}
+  new_version=$((cur_version+1))
+  bk_name_plus=${bk_name##.}${new_version}
+  mv ${bk_name} ${bk_name_plus}
+}

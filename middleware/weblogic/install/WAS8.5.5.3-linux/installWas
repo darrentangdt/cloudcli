@@ -1,0 +1,126 @@
+sleep 1
+
+CUR_HOME=`pwd`
+#判断配置文件是否存在,并export参数
+if [ -r config.txt ]
+then
+	echo "*****************************************************************************"
+	PARMS=`grep = config.txt|grep -v ^#`
+	for p in $PARMS
+		do
+			eval p=`echo $p`
+			echo $p
+			export $p
+		done
+	echo "*****************************************************************************"
+else
+	echo "Error >> config file check failed! there is no config.txt file!"
+	exit -1
+fi
+
+curUser=`whoami`
+if [ "${curUser}" != "${RunUser}" ]
+then
+	echo "********************************************************"
+	echo "*        you must use ${RunUser} run install...            *"
+	echo "********************************************************"
+	echo ""
+	exit
+fi
+
+#判断参数是否缺失
+Param="IM_HOME WAS_Repository IMShared_HOME WAS_HOME RunUser CreateProfile ProfileName ProfilePath NodeName CellName HostName ServerName AdminUserName AdminPassword"
+for p in $Param
+	do
+		eval var=$`echo $p`
+		if [ "${var}" == "" ]
+		then
+			echo " Error >> Params check failed! $p is null"
+			exit -1
+		fi
+done
+
+echo "*****************************************************************************"
+echo "*	Step 1/4: create silent File...																						*"
+echo "*****************************************************************************"
+
+#生成IM静默脚本
+IM_Repository=${CUR_HOME}/IM
+sed 's:#IM_HOME#:'$IM_HOME':' ${CUR_HOME}/response/installIM.templete > ${CUR_HOME}/response/installIM.tmp
+mv ${CUR_HOME}/response/installIM.tmp ${CUR_HOME}/response/installIM.xml
+sed 's:#IM_Repository#:'$IM_Repository':' ${CUR_HOME}/response/installIM.xml > ${CUR_HOME}/response/installIM.tmp
+mv ${CUR_HOME}/response/installIM.tmp ${CUR_HOME}/response/installIM.xml
+echo " Info : >> create silent file Sucess:" ${CUR_HOME}/response/installIM.xml
+
+#生成WAS静默脚本
+sed 's%#WAS_Repository#%'$WAS_Repository'%' ${CUR_HOME}/response/installWAS.templete > ${CUR_HOME}/response/installWAS.tmp
+mv ${CUR_HOME}/response/installWAS.tmp ${CUR_HOME}/response/installWAS.xml
+sed 's:#WAS_HOME#:'$WAS_HOME':' ${CUR_HOME}/response/installWAS.xml > ${CUR_HOME}/response/installWAS.tmp
+mv ${CUR_HOME}/response/installWAS.tmp ${CUR_HOME}/response/installWAS.xml
+sed 's:#IMShared_HOME#:'$IMShared_HOME':' ${CUR_HOME}/response/installWAS.xml > ${CUR_HOME}/response/installWAS.tmp
+mv ${CUR_HOME}/response/installWAS.tmp ${CUR_HOME}/response/installWAS.xml
+echo " Info : >> create silent file Sucess:" ${CUR_HOME}/response/installWAS.xml
+
+
+echo "*****************************************************************************"
+echo "*	Step 2/4: install IM  begin .....*"
+echo "*****************************************************************************"
+
+if [ -d ${IM_HOME} ]
+then :
+    echo " Info : >> The directory ${IM_HOME} dose exist, IM install was not running "
+else
+	cd ${CUR_HOME}/IM
+	./userinstc -input ${CUR_HOME}/response/installIM.xml -silent -showProgress -acceptLicense
+		
+	if [ -d ${IM_HOME}/eclipse/tools ]
+	then
+		cd ${IM_HOME}/eclipse/tools
+		lastPackage=`./imcl  listInstalledPackages|grep "com.ibm.cic.agent" `
+		if [ "$lastPackage" != "" ]
+		then
+			echo " Info >> :	IM install sucessed : $lastPackage"
+		else
+			echo " Error >> : IM install failed !"
+			exit -1
+		fi
+	else
+		echo " Error >> :there is no directory : ${IM_HOME}/eclipse/tools"
+		exit -1
+	fi
+fi
+
+
+sleep 2
+echo "*****************************************************************************"
+echo "*	Step 3/4: install WAS  begin .....*"
+echo "*****************************************************************************"
+if [ -d ${WAS_HOME} ]
+then :
+    echo " Info : >> The directory ${WAS_HOME} dose exist, WAS install was not running "
+else
+	cd ${IM_HOME}/eclipse/tools
+	./imcl -input ${CUR_HOME}/response/installWAS.xml  -silent -showProgress -acceptLicense
+	lastPackage=`./imcl listInstalledPackages|grep "com.ibm.websphere.BASE" `
+	if [ "$lastPackage" != "" ]
+	then
+		echo " Info >> :	WAS install sucessed : $lastPackage"
+	else
+		echo " Error >> : WAS install failed !"
+		exit -1
+	fi
+fi
+
+
+sleep 2
+echo "*****************************************************************************"
+echo "*	Step 4/4: create Profile..																						*"
+echo "*****************************************************************************"
+if [ "${CreateProfile}" == "true" ]
+then
+	cd $CUR_HOME
+	sh createProfile
+fi
+
+echo ""
+echo " Info >> WAS Installed Sucessed!"

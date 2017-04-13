@@ -1,0 +1,40 @@
+
+#判断配置文件是否存在,并export参数
+if [ -r config.txt ]
+then
+	echo "*****************************************************************************"
+	PARMS=`grep = config.txt|grep -v ^#`
+	for p in $PARMS
+		do
+			eval p=`echo $p`
+			echo $p
+			export $p
+		done
+	echo "*****************************************************************************"
+else
+	echo "Error >> config file check failed! there is no config.txt file!"
+	exit -1
+fi
+
+Param="WAS_HOME ProfileName NodeName CellName HostName ServerName ProfilePath AdminUserName AdminPassword"
+for p in $Param
+	do
+		eval var=$`echo $p`
+		if [ "${var}" == "" ]
+		then
+			echo " Error >> $p is null"
+			exit -1
+		fi
+	done
+
+echo "Start to create profile $profileName"
+
+$WAS_HOME/bin/manageprofiles.sh -create -profileName ${ProfileName} -profilePath ${ProfilePath} -templatePath ${WAS_HOME}/profileTemplates/default -nodeName ${NodeName} -cellName ${CellName} -hostName ${HostName} -serverName ${ServerName} -enableAdminSecurity true -adminUserName ${AdminUserName} -adminPassword ${AdminPassword}
+
+export successMark=`sed -n '/INSTCONFSUCCESS/'p ${WAS_HOME}/logs/manageprofiles/${ProfileName}_create.log`
+
+if [ "${successMark}" == "" ]; then
+	echo "Profile creation failed"
+	exit -1
+fi
+echo "Profile creation successful"

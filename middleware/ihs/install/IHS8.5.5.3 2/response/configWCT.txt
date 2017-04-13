@@ -1,0 +1,10 @@
+configType="remote"
+webServerConfigFile1="/data/middleware/HTTPServer/conf/httpd.conf"
+webServerSelected=ihs
+webServerPortNumber="80"
+webServerDefinition="webserver1"
+wasMachineHostName="ebankapp"
+mapWebserverToApplications="true"
+webServerHostName=""
+webServerInstallArch="64"
+webServerType="IHS"

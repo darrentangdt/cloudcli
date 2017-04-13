@@ -1,0 +1,10 @@
+max_buf_huge   128
+max_buf_large  256
+max_buf_medium 1024
+max_buf_small  2048
+max_buf_tiny   2048
+min_buf_huge   96
+min_buf_large  96
+min_buf_medium 512
+min_buf_small  512
+min_buf_tiny   512

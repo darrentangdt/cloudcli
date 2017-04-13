@@ -1,0 +1,5 @@
+---------------20130307----ccsd-----------------------------
+DBCHK_ORA_OVERFLOWER_RES.sh  增加socate over flow  查过1000报错
+DBCHK_ORA_CKLSNERLOG_RES.sh  增加判断监听是否为打开状态
+DBCHK_ORA_TBSRATE_RES.sh     增加判断是否有自定义阀值
+DBCHK_ORA_FOREIGEINDEX_RES.sh 增加过滤指定table 名；

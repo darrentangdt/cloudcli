@@ -1,0 +1,236 @@
+sleep 1
+
+CUR_HOME=`pwd`
+#判断配置文件是否存在,并export参数
+if [ -r config.txt ]
+then
+	echo "*****************************************************************************"
+	PARMS=`grep = config.txt|grep -v ^#`
+	for p in $PARMS
+		do
+			eval p=`echo $p`
+			echo $p
+			export $p
+		done
+	echo "*****************************************************************************"
+else
+	echo "Error >> config file check failed! there is no config.txt file!"
+	exit -1
+fi
+
+curUser=`whoami`
+if [ "${curUser}" != "${RunUser}" ]
+then
+	echo "********************************************************"
+	echo "*        you must use ${RunUser} run install...            *"
+	echo "********************************************************"
+	echo ""
+	exit
+fi
+
+
+
+#判断参数是否缺失
+Param="IM_HOME IMShared_HOME RunUser IHS_HOME IHS_Repository IHS_PORT PLG_HOME WCT_HOME IHSConfigFile WEBSERVER_NAME LOG_HOME"
+for p in $Param
+	do
+		eval var=$`echo $p`
+		if [ "${var}" == "" ]
+		then
+			echo " Error >> Params check failed! $p is null"
+			exit -1
+		fi
+done
+
+echo "*****************************************************************************"
+echo "*	Step 1/7: create silent File...																						*"
+echo "*****************************************************************************"
+
+#生成IM静默脚本
+IM_Repository=${CUR_HOME}/IM
+sed 's:#IM_HOME#:'$IM_HOME':' ${CUR_HOME}/response/installIM.templete > ${CUR_HOME}/response/installIM.tmp
+mv ${CUR_HOME}/response/installIM.tmp ${CUR_HOME}/response/installIM.xml
+sed 's:#IM_Repository#:'$IM_Repository':' ${CUR_HOME}/response/installIM.xml > ${CUR_HOME}/response/installIM.tmp
+mv ${CUR_HOME}/response/installIM.tmp ${CUR_HOME}/response/installIM.xml
+echo " Info : >> create silent file Sucess:" ${CUR_HOME}/response/installIM.xml
+
+
+#生成IHS静默脚本
+sed 's%#IHS_Repository#%'$IHS_Repository'%' ${CUR_HOME}/response/installIHS.templete > ${CUR_HOME}/response/installIHS.tmp
+mv ${CUR_HOME}/response/installIHS.tmp ${CUR_HOME}/response/installIHS.xml
+sed 's:#IHS_HOME#:'$IHS_HOME':' ${CUR_HOME}/response/installIHS.xml > ${CUR_HOME}/response/installIHS.tmp
+mv ${CUR_HOME}/response/installIHS.tmp ${CUR_HOME}/response/installIHS.xml
+sed 's:#IHS_PORT#:'$IHS_PORT':' ${CUR_HOME}/response/installIHS.xml > ${CUR_HOME}/response/installIHS.tmp
+mv ${CUR_HOME}/response/installIHS.tmp ${CUR_HOME}/response/installIHS.xml
+sed 's:#IMShared_HOME#:'$IMShared_HOME':' ${CUR_HOME}/response/installIHS.xml > ${CUR_HOME}/response/installIHS.tmp
+mv ${CUR_HOME}/response/installIHS.tmp ${CUR_HOME}/response/installIHS.xml
+echo " Info : >> create silent file Sucess:" ${CUR_HOME}/response/installIHS.xml
+
+#生成PLUGIN静默脚本
+sed 's%#IHS_Repository#%'$IHS_Repository'%' ${CUR_HOME}/response/installPLG.templete > ${CUR_HOME}/response/installPLG.tmp
+mv ${CUR_HOME}/response/installPLG.tmp ${CUR_HOME}/response/installPLG.xml
+sed 's:#PLG_HOME#:'$PLG_HOME':' ${CUR_HOME}/response/installPLG.xml > ${CUR_HOME}/response/installPLG.tmp
+mv ${CUR_HOME}/response/installPLG.tmp ${CUR_HOME}/response/installPLG.xml
+sed 's:#IMShared_HOME#:'$IMShared_HOME':' ${CUR_HOME}/response/installPLG.xml > ${CUR_HOME}/response/installPLG.tmp
+mv ${CUR_HOME}/response/installPLG.tmp ${CUR_HOME}/response/installPLG.xml
+echo " Info : >> create silent file Sucess:" ${CUR_HOME}/response/installPLG.xml
+
+#生成WCT静默脚本
+sed 's%#IHS_Repository#%'$IHS_Repository'%' ${CUR_HOME}/response/installWCT.templete > ${CUR_HOME}/response/installWCT.tmp
+mv ${CUR_HOME}/response/installWCT.tmp ${CUR_HOME}/response/installWCT.xml
+sed 's:#WCT_HOME#:'$WCT_HOME':' ${CUR_HOME}/response/installWCT.xml > ${CUR_HOME}/response/installWCT.tmp
+mv ${CUR_HOME}/response/installWCT.tmp ${CUR_HOME}/response/installWCT.xml
+sed 's:#IMShared_HOME#:'$IMShared_HOME':' ${CUR_HOME}/response/installWCT.xml > ${CUR_HOME}/response/installWCT.tmp
+mv ${CUR_HOME}/response/installWCT.tmp ${CUR_HOME}/response/installWCT.xml
+echo " Info : >> create silent file Sucess:" ${CUR_HOME}/response/installWCT.xml
+
+
+#生成WCT配置脚本
+sed 's%#IHSConfigFile#%'$IHSConfigFile'%' ${CUR_HOME}/response/configWCT.templete > ${CUR_HOME}/response/configWCT.tmp
+mv ${CUR_HOME}/response/configWCT.tmp ${CUR_HOME}/response/configWCT.txt
+sed 's:#IHS_PORT#:'$IHS_PORT':' ${CUR_HOME}/response/configWCT.txt > ${CUR_HOME}/response/configWCT.tmp
+mv ${CUR_HOME}/response/configWCT.tmp ${CUR_HOME}/response/configWCT.txt
+sed 's:#WEBSERVER_NAME#:'$WEBSERVER_NAME':' ${CUR_HOME}/response/configWCT.txt > ${CUR_HOME}/response/configWCT.tmp
+mv ${CUR_HOME}/response/configWCT.tmp ${CUR_HOME}/response/configWCT.txt
+echo " Info : >> create silent file Sucess:" ${CUR_HOME}/response/configWCT.txt
+
+#生成webserver创建脚本
+sed 's%#IHS_HOME#%'$IHS_HOME'%' ${CUR_HOME}/response/configWebServer.sh.templet > ${CUR_HOME}/response/configWebServer.sh.tmp
+mv ${CUR_HOME}/response/configWebServer.sh.tmp ${CUR_HOME}/response/configWebServer.sh
+
+sed 's%#IHS_PORT#%'$IHS_PORT'%' ${CUR_HOME}/response/configWebServer.sh > ${CUR_HOME}/response/configWebServer.sh.tmp
+mv ${CUR_HOME}/response/configWebServer.sh.tmp ${CUR_HOME}/response/configWebServer.sh
+
+sed 's%#PLG_HOME#%'$PLG_HOME'%' ${CUR_HOME}/response/configWebServer.sh > ${CUR_HOME}/response/configWebServer.sh.tmp
+mv ${CUR_HOME}/response/configWebServer.sh.tmp ${CUR_HOME}/response/configWebServer.sh
+
+sed 's%#WEBSERVER_NAME#%'$WEBSERVER_NAME'%' ${CUR_HOME}/response/configWebServer.sh > ${CUR_HOME}/response/configWebServer.sh.tmp
+mv ${CUR_HOME}/response/configWebServer.sh.tmp ${CUR_HOME}/config${WEBSERVER_NAME}.sh
+
+
+echo "*****************************************************************************"
+echo "*	Step 2/7: install IM  begin .....*"
+echo "*****************************************************************************"
+
+if [ -d ${IM_HOME} ]
+then :
+    echo " Info : >> The directory ${IM_HOME} dose exist, IM install was not running "
+else
+	cd ${CUR_HOME}/IM
+	./userinstc -input ${CUR_HOME}/response/installIM.xml -silent -showProgress -acceptLicense
+		
+	if [ -d ${IM_HOME}/eclipse/tools ]
+	then
+		cd ${IM_HOME}/eclipse/tools
+		lastPackage=`./imcl  listInstalledPackages|tail -1 |grep "com.ibm.cic.agent" `
+		if [ $lastPackage != "" ]
+		then
+			echo " Info >> :	IM install sucessed : $lastPackage"
+		else
+			echo " Error >> : IM install failed !"
+			exit -1
+		fi
+	else
+		echo " Error >> :there is no directory : ${IM_HOME}/eclipse/tools"
+		exit -1
+	fi
+fi
+
+
+sleep 1
+echo "*****************************************************************************"
+echo "*	Step 3/7: install IHS  begin .....*"
+echo "*****************************************************************************"
+if [ -d ${IHS_HOME} ]
+then :
+    echo " Info : >> The directory ${IHS_HOME} dose exist, IHS install was not running "
+else
+	cd ${IM_HOME}/eclipse/tools
+	./imcl -input ${CUR_HOME}/response/installIHS.xml -silent -showProgress -acceptLicense
+	lastPackage=`./imcl listInstalledPackages|tail -1 |grep "com.ibm.websphere.IHS"`
+	if [ $lastPackage != "" ]
+	then
+		echo " Info >> :	IHS install sucessed : $lastPackage"
+	else
+		echo " Error >> : IHS install failed !"
+		exit -1
+	fi
+fi
+
+
+sleep 1
+echo "*****************************************************************************"
+echo "*	Step 4/7: install PLG  begin .....*"
+echo "*****************************************************************************"
+if [ -d ${PLG_HOME} ]
+then :
+    echo " Info : >> The directory ${PLG_HOME} dose exist, Plugin install was not running "
+else
+	cd ${IM_HOME}/eclipse/tools
+	./imcl -input ${CUR_HOME}/response/installPLG.xml  -silent -showProgress -acceptLicense
+	lastPackage=`./imcl listInstalledPackages|tail -1 |grep "com.ibm.websphere.PLG"`
+	if [ $lastPackage != "" ]
+	then
+		echo " Info >> :	Plugin install sucessed : $lastPackage"
+	else
+		echo " Error >> : Plugin install failed !"
+		exit -1
+	fi
+fi
+
+sleep 1
+echo "*****************************************************************************"
+echo "*	Step 5/7: install WCT  begin .....*"
+echo "*****************************************************************************"
+if [ -d ${WCT_HOME} ]
+then :
+    echo " Info : >> The directory ${WCT_HOME} dose exist, WCT install was not running "
+else
+	cd ${IM_HOME}/eclipse/tools
+	./imcl -input ${CUR_HOME}/response/installWCT.xml  -silent -showProgress -acceptLicense
+	lastPackage=`./imcl listInstalledPackages|tail -1 |grep "com.ibm.websphere.WCT"  `
+	if [ $lastPackage != "" ]
+	then
+		echo " Info >> :	WCT install sucessed : $lastPackage"
+	else
+		echo " Error >> : WCT install failed !"
+		exit -1
+	fi
+fi
+
+sleep 1
+echo "*****************************************************************************"
+echo "*	Step 6/7: config WCT  begin .....*"
+echo "*****************************************************************************"
+if [ -d ${WCT_HOME} ]
+then :
+	cd ${WCT_HOME}/WCT	
+	./wctcmd.sh -tool pct -defLocName plugin -defLocPathname ${PLG_HOME} -response ${CUR_HOME}/response/configWCT.txt
+	result=$?
+	if [ $result -eq 0 ]
+	then
+		echo " Info >> WCT config Sucessed!"
+	else
+		echo "Error >> config WCT failed "
+	fi
+else
+	echo "	Warn  >> : The ${WCT_HOME} is not exist, WCT config is not running"
+fi
+
+echo ""
+
+echo "*****************************************************************************"
+echo "*	Step 7/6.5: mkdir logdir"
+echo "*****************************************************************************"
+mkdir $LOG_HOME
+
+sleep 4
+echo "*****************************************************************************"
+echo "*	Step 7/7: config httpd.conf...*"
+echo "*****************************************************************************"
+cd $CUR_HOME
+sh configHttpd.sh
+
+echo "	Info >> disableTrace is not run, please run is after you configured VirtualHost"
+#sh disableHttpTrace.sh
+
