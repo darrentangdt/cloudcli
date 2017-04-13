@@ -1,0 +1,32 @@
+#!/bin/sh
+#************************************************#
+# 文件名:SYSCHK_VIOS_AIX_CPU_RES.sh
+# 作  者:iomp_zcw
+# 日  期:2014年2月10日
+# 功  能:保留CPU资源使用情况检查
+# 复核人:
+#************************************************#
+
+#判断该台主机是不是VIOS
+export LANG=ZH_CN.UTF-8
+if grep padmin /etc/passwd >/dev/null 2>&1
+	then
+		:
+	else
+exit 0
+fi
+
+#检查临时脚本输出目录是否存在
+cd /home/ap/opscloud/logs >/dev/null 2>&1||mkdir -p /home/ap/opscloud/logs
+cd /home/ap/opscloud/logs >/dev/null 2>&1
+
+#检查虚拟机保留CPU资源使用情况
+if [ `lparstat 1 10|awk 'NR>5 {size+=$6} END {print size/10}'` -le 80 ]
+	then
+		echo "Compliant"
+		echo "正常" >SYSCHK_VIOS_AIX_CPU_RES.out
+	else
+	echo "Non-Compliant"
+	echo "异常 , CPU使用率超过80% ,请检查" >SYSCHK_VIOS_AIX_CPU_RES.out
+
+fi
